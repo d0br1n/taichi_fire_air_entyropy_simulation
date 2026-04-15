@@ -21,8 +21,8 @@ A real-time 3D fire particle simulation using Taichi, featuring particle dynamic
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/fire-simulation-taichi.git
-   cd fire-simulation-taichi
+   git clone https://github.com/d0br1n/taichi_fire_air_entyropy_simulation.git
+   cd taichi_fire_air_entyropy_simulation
    ```
 
 2. **Create a virtual environment** (recommended):
@@ -115,7 +115,7 @@ MIT License
 
 ## Author
 
-Your Name (your.email@example.com)
+d0br1n - [GitHub](alexandrudobrin5@gmail.com)
 
 ## Acknowledgments
 
