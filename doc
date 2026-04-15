@@ -1,0 +1,79 @@
+3D Fire + Air Entropy Visualization (Taichi)
+this is small interactive 3d simulation that shows fire-like rising particles + "air" particles trapped inside a cube.
+the air particles are used to calculate very simple "entropy" in little 5×5×5 grid cubes → then we color those cubes depending how "mixed" or "crowded" the air is inside each small volume.
+main idea:
+
+orange/yellow/red particles = fire rising from small disc at bottom
+white particles = air molecules bouncing inside invisible cube
+colored semi-transparent cubes = visualization of local entropy (more red = higher entropy / more disorder)
+
+main features
+
+realistic-ish fire look with temperature-based color fade (white→yellow→orange→red→dark)
+fire particles feel pushed away by their own density (using very simple grid gradient)
+air particles bounce on cube walls and push each other a little (basic elastic swap)
+entropy shown as 5×5×5 grid of colored semi-transparent cubes
+low entropy → blue-ish
+high entropy → red-ish
+gui sliders to play with energy, emission rate, max particles etc
+press r → reset everything
+wasd + qe → simple camera movement
+
+important parameters you can change at top
+PythonMAX_FIRE = 60_000          # max number of fire particles
+MAX_AIR  = 10_000          # max number of air particles
+EMIT_RATE = 6000           # how many fire particles per second (approx)
+PARTICLE_LIFETIME = 1.7    # how long fire lives (seconds)
+
+EMITTER_RADIUS = 0.20      # size of fire source disc
+BASE_UPWARD_SPEED = 1.5    # base rising speed
+
+GRID_CELL_SIZE = 0.1       # size of density grid cell for fire push
+GRID_SIZE_X/Y/Z = 48       # density grid resolution
+
+ENTROPY_GRID_DIV = 5       # 5×5×5 = 125 entropy cubes
+cube_half = 2.5            # cube goes from -2.5..2.5 in x/z and 0..2.5 in y
+how the entropy part works (simplified)
+
+every frame we count how many air particles are in each small cube (5×5×5 grid)
+we calculate very simple "entropy" using stirling approx of ln(n!)
+(right now we use n * log(n) - n scaled by boltzmann_k=1.0)
+find maximum entropy value in this frame
+normalize every cell entropy against that max → get 0..1 value
+map 0 → blue, 1 → red (with pow(0.35) gamma so low values are more visible)
+write same color to all 8 vertices of that cube
+render as semi-transparent mesh (alpha=0.28)
+
+note: current entropy is still negative most of time because of -n term.
+this means almost everything stays blue unless you have very high particle counts.
+many people change it to just use particle count directly (s_val = n) or n * log(n+1) to make colors more lively.
+quick ways to improve colors right now
+change this part in calculate_entropy() kernel:
+Python# option A - just use particle count (easiest, works immediately)
+entropy_grid_entropy[i,j,k] = n
+ti.atomic_max(max_entropy_val[None], n + 1e-4)
+
+# option B - positive growing value
+entropy_grid_entropy[i,j,k] = n * ti.log(n + 1.0)
+ti.atomic_max(max_entropy_val[None], n * ti.log(n + 1.0) + 1e-4)
+then colors start to make more sense (more particles = redder)
+known small issues / things to improve
+
+no real turbulence / vorticity for air (just basic bounce + gradient push)
+particles drawn twice sometimes (two scene.particles(pos) calls — to ensure the constant rendering of the particles over the cubes)
+no shadows or fancy lighting (just one point light + ambient)
+
+controls cheat sheet
+
+r          → reset simulation
+a / d     → rotate left/right
+w / s     → zoom in/out
+q / e     → camera height up/down
+sliders:
+energy            → affects fire speed & color temperature
+emit rate         → how fast new fire appears
+max fire particles -- not working properly
+max air particles
+
+
+have fun playing with it!
